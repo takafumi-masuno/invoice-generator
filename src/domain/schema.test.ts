@@ -100,7 +100,10 @@ describe("DocumentSchema", () => {
     expect(errorsOf(DocumentSchema, invoiceFixture({ transactionDate: "" }))).toEqual([
       "transactionDate: 取引年月日を入力してください",
     ]);
-    expect("transactionDate" in estimateFixture()).toBe(false);
+    // 見積書は取引年月日がなくても検証を通る
+    const result = v.safeParse(DocumentSchema, estimateFixture());
+    expect(result.success).toBe(true);
+    expect(result.output).not.toHaveProperty("transactionDate");
   });
 
   it("期限は空か、発行日以降の日付", () => {

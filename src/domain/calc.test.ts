@@ -6,7 +6,7 @@ import {
   type RoundingSettings,
 } from "./calc";
 
-const FLOOR: RoundingSettings = { lineAmount: "floor", tax: "floor" };
+const FLOOR: RoundingSettings = { lineAmount: "down", tax: "down" };
 
 const item = (unitPrice: number, quantity: number, taxRate: 10 | 8 = 10): CalcLineItem => ({
   unitPrice,
@@ -16,25 +16,25 @@ const item = (unitPrice: number, quantity: number, taxRate: 10 | 8 = 10): CalcLi
 
 describe("calculateLineAmount", () => {
   it("単価 × 数量", () => {
-    expect(calculateLineAmount(item(1200, 3), "floor")).toBe(3600);
+    expect(calculateLineAmount(item(1200, 3), "down")).toBe(3600);
   });
 
   it("小数の数量で円未満が出たら端数処理する", () => {
     // 3,333 × 1.5 = 4,999.5
-    expect(calculateLineAmount(item(3333, 1.5), "floor")).toBe(4999);
-    expect(calculateLineAmount(item(3333, 1.5), "ceil")).toBe(5000);
-    expect(calculateLineAmount(item(3333, 1.5), "round")).toBe(5000);
+    expect(calculateLineAmount(item(3333, 1.5), "down")).toBe(4999);
+    expect(calculateLineAmount(item(3333, 1.5), "up")).toBe(5000);
+    expect(calculateLineAmount(item(3333, 1.5), "halfUp")).toBe(5000);
   });
 
   it("浮動小数点の誤差を出さない", () => {
     // 浮動小数点では 0.07 × 100 = 7.000000000000001、1.15 × 100 = 114.99999999999999 になる
-    expect(calculateLineAmount(item(100, 0.07), "ceil")).toBe(7);
-    expect(calculateLineAmount(item(100, 1.15), "floor")).toBe(115);
+    expect(calculateLineAmount(item(100, 0.07), "up")).toBe(7);
+    expect(calculateLineAmount(item(100, 1.15), "down")).toBe(115);
   });
 
   it("マイナスの単価（値引き）", () => {
-    expect(calculateLineAmount(item(-1000, 1), "floor")).toBe(-1000);
-    expect(calculateLineAmount(item(-3333, 1.5), "floor")).toBe(-4999);
+    expect(calculateLineAmount(item(-1000, 1), "down")).toBe(-1000);
+    expect(calculateLineAmount(item(-3333, 1.5), "down")).toBe(-4999);
   });
 });
 
@@ -65,13 +65,13 @@ describe("calculateTotals", () => {
   });
 
   it.each([
-    ["floor", 1234, 798],
-    ["ceil", 1235, 799],
-    ["round", 1235, 799],
+    ["down", 1234, 798],
+    ["up", 1235, 799],
+    ["halfUp", 1235, 799],
   ] as const)("税額の端数処理（%s）", (mode, tax10, tax8) => {
     // 12,345 × 10% = 1,234.5 円、9,987 × 8% = 798.96 円
     const totals = calculateTotals([item(12345, 1, 10), item(9987, 1, 8)], {
-      lineAmount: "floor",
+      lineAmount: "down",
       tax: mode,
     });
     expect(totals.breakdown.map((b) => b.tax)).toEqual([tax10, tax8]);
@@ -79,7 +79,7 @@ describe("calculateTotals", () => {
 
   it("明細の金額と税額で別々の端数処理を使う", () => {
     // 明細: 3,333 × 1.5 = 4,999.5 → 切上げで 5,000 円。税額: 5,000 × 8% = 400 円
-    const totals = calculateTotals([item(3333, 1.5, 8)], { lineAmount: "ceil", tax: "floor" });
+    const totals = calculateTotals([item(3333, 1.5, 8)], { lineAmount: "up", tax: "down" });
     expect(totals.lineAmounts).toEqual([5000]);
     expect(totals.breakdown).toEqual([{ rate: 8, taxableAmount: 5000, tax: 400 }]);
   });

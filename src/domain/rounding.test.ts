@@ -12,28 +12,28 @@ describe("roundDiv", () => {
     [149, 100, 1, 2, 1], // 1.49
     [150, 100, 1, 2, 2], // 1.50
     [0, 100, 0, 0, 0],
-  ])("%i / %i を丸める", (n, d, floor, ceil, round) => {
-    expect(roundDiv(n, d, "floor")).toBe(floor);
-    expect(roundDiv(n, d, "ceil")).toBe(ceil);
-    expect(roundDiv(n, d, "round")).toBe(round);
+  ])("%i / %i を丸める", (n, d, down, up, halfUp) => {
+    expect(roundDiv(n, d, "down")).toBe(down);
+    expect(roundDiv(n, d, "up")).toBe(up);
+    expect(roundDiv(n, d, "halfUp")).toBe(halfUp);
   });
 
   it("マイナスは絶対値で丸める（値引き行のため）", () => {
-    expect(roundDiv(-12345, 10, "floor")).toBe(-1234);
-    expect(roundDiv(-12345, 10, "ceil")).toBe(-1235);
-    expect(roundDiv(-12345, 10, "round")).toBe(-1235);
-    expect(roundDiv(-12344, 10, "round")).toBe(-1234);
+    expect(roundDiv(-12345, 10, "down")).toBe(-1234);
+    expect(roundDiv(-12345, 10, "up")).toBe(-1235);
+    expect(roundDiv(-12345, 10, "halfUp")).toBe(-1235);
+    expect(roundDiv(-12344, 10, "halfUp")).toBe(-1234);
   });
 
   it("浮動小数点では誤差が出る大きな値も正確に計算する", () => {
     // 9,007,199,254,740,991（Number.MAX_SAFE_INTEGER）付近
-    expect(roundDiv(9_007_199_254_740_991, 10, "floor")).toBe(900_719_925_474_099);
-    expect(roundDiv(9_007_199_254_740_991, 10, "ceil")).toBe(900_719_925_474_100);
+    expect(roundDiv(9_007_199_254_740_991, 10, "down")).toBe(900_719_925_474_099);
+    expect(roundDiv(9_007_199_254_740_991, 10, "up")).toBe(900_719_925_474_100);
   });
 
   it("整数以外や 0 以下の割る数はエラーにする", () => {
-    expect(() => roundDiv(1.5, 10, "floor")).toThrow(RangeError);
-    expect(() => roundDiv(10, 0, "floor")).toThrow(RangeError);
-    expect(() => roundDiv(10, -1, "floor")).toThrow(RangeError);
+    expect(() => roundDiv(1.5, 10, "down")).toThrow(RangeError);
+    expect(() => roundDiv(10, 0, "down")).toThrow(RangeError);
+    expect(() => roundDiv(10, -1, "down")).toThrow(RangeError);
   });
 });

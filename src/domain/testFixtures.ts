@@ -32,7 +32,7 @@ const baseFixture = {
   issuer: issuerFixture(),
   items: [lineItemFixture()],
   notes: "",
-  rounding: { lineAmount: "floor" as const, tax: "floor" as const },
+  rounding: { lineAmount: "down" as const, tax: "down" as const },
   createdAt: "2026-11-01T00:00:00.000Z",
   updatedAt: "2026-11-01T00:00:00.000Z",
 };
