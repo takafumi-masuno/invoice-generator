@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
@@ -5,7 +7,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   // GitHub Pages のプロジェクトページ（https://takafumi-masuno.github.io/invoice-generator/）で配信するため
   base: "/invoice-generator/",
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  },
   build: {
     // PDF 生成ライブラリ（@react-pdf/renderer）のチャンクは約1.2MBあるが、PDF を表示するときだけ
     // 遅延読み込みしていて最初の表示には影響しないため、警告の上限をそれに合わせる
