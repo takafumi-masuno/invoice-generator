@@ -29,7 +29,7 @@ describe("IssuerSchema", () => {
     expect(errorsOf(IssuerSchema, issuerFixture({ registrationNumber: "T1234567890123" }))).toEqual(
       [],
     );
-    for (const invalid of ["1234567890123", "T123456789012", "T12345678901234", "t1234567890123"]) {
+    for (const invalid of ["1234567890123", "T123456789012", "T12345678901234", "TT234567890123"]) {
       expect(errorsOf(IssuerSchema, issuerFixture({ registrationNumber: invalid }))).toEqual([
         "registrationNumber: 登録番号は T と13桁の数字で入力してください（例: T1234567890123）",
       ]);
@@ -43,6 +43,27 @@ describe("IssuerSchema", () => {
     );
     expect(result.name).toBe("株式会社サンプル");
     expect(result.registrationNumber).toBe("T1234567890123");
+  });
+
+  it("全角で入力された登録番号・郵便番号・電話番号を半角にそろえる", () => {
+    const result = v.parse(
+      IssuerSchema,
+      issuerFixture({
+        registrationNumber: "Ｔ１２３４５６７８９０１２３",
+        postalCode: "１００－０００１",
+        phone: "０３－００００－００００",
+      }),
+    );
+    expect(result.registrationNumber).toBe("T1234567890123");
+    expect(result.postalCode).toBe("100-0001");
+    expect(result.phone).toBe("03-0000-0000");
+  });
+
+  it("小文字の t で始まる登録番号も受け付ける", () => {
+    expect(
+      v.parse(IssuerSchema, issuerFixture({ registrationNumber: "t1234567890123" }))
+        .registrationNumber,
+    ).toBe("T1234567890123");
   });
 
   it("発行者名は必須", () => {
