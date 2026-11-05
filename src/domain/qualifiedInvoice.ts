@@ -30,8 +30,8 @@ export const QUALIFIED_INVOICE_REQUIREMENTS: readonly QualifiedInvoiceRequiremen
   {
     key: "transactionDate",
     label: "取引年月日",
-    howSatisfied: "請求書の「取引年月日」",
-    isMet: (invoice) => invoice.transactionDate !== "",
+    howSatisfied: "請求書の「取引年月日」（期間でまとめる場合は開始日と終了日）",
+    isMet: (invoice) => invoice.transactionStart !== "",
   },
   {
     key: "description",

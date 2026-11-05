@@ -22,7 +22,7 @@ describe("適格請求書の記載事項", () => {
 
   it("入力途中の未入力項目を、満たしていない記載事項として返す", () => {
     const invoice = invoiceFixture({
-      transactionDate: "",
+      transactionStart: "",
       client: { name: "", honorific: "御中", address: "" },
       items: [],
     });

@@ -195,11 +195,23 @@ export const InvoiceSchema = v.pipe(
   v.object({
     ...DOCUMENT_BASE_ENTRIES,
     kind: v.literal("invoice"),
-    /** 取引年月日（適格請求書の記載事項） */
-    transactionDate: dateText("取引年月日"),
+    /**
+     * 取引年月日（適格請求書の記載事項）。一定期間の取引をまとめて「10月1日〜10月31日」のように
+     * 記載してもよいため、開始日（必須）と終了日（任意。空なら1日の取引）で持つ
+     */
+    transactionStart: dateText("取引年月日"),
+    transactionEnd: optionalDateText("取引期間の終了日"),
     /** 支払期限（任意） */
     dueDate: optionalDateText("支払期限"),
   }),
+  v.forward(
+    v.partialCheck(
+      [["transactionStart"], ["transactionEnd"]],
+      (input) => input.transactionEnd === "" || input.transactionEnd >= input.transactionStart,
+      "取引期間の終了日は開始日以降の日付にしてください",
+    ),
+    ["transactionEnd"],
+  ),
   v.forward(
     v.partialCheck(
       [["issueDate"], ["dueDate"]],

@@ -97,13 +97,32 @@ describe("DocumentSchema", () => {
   });
 
   it("請求書は取引年月日が必須、見積書には不要", () => {
-    expect(errorsOf(DocumentSchema, invoiceFixture({ transactionDate: "" }))).toEqual([
-      "transactionDate: 取引年月日を入力してください",
+    expect(errorsOf(DocumentSchema, invoiceFixture({ transactionStart: "" }))).toEqual([
+      "transactionStart: 取引年月日を入力してください",
     ]);
     // 見積書は取引年月日がなくても検証を通る
     const result = v.safeParse(DocumentSchema, estimateFixture());
     expect(result.success).toBe(true);
-    expect(result.output).not.toHaveProperty("transactionDate");
+    expect(result.output).not.toHaveProperty("transactionStart");
+  });
+
+  it("取引年月日は1日でも期間でもよく、期間の終了日は開始日以降", () => {
+    expect(errorsOf(DocumentSchema, invoiceFixture({ transactionEnd: "" }))).toEqual([]);
+    expect(
+      errorsOf(
+        DocumentSchema,
+        invoiceFixture({ transactionStart: "2026-10-31", transactionEnd: "2026-10-31" }),
+      ),
+    ).toEqual([]);
+    expect(
+      errorsOf(
+        DocumentSchema,
+        invoiceFixture({ transactionStart: "2026-10-31", transactionEnd: "2026-10-30" }),
+      ),
+    ).toEqual(["transactionEnd: 取引期間の終了日は開始日以降の日付にしてください"]);
+    expect(errorsOf(DocumentSchema, invoiceFixture({ transactionEnd: "2026-10-32" }))).toEqual([
+      "transactionEnd: 取引期間の終了日は正しい日付を入力してください",
+    ]);
   });
 
   it("期限は空か、発行日以降の日付", () => {

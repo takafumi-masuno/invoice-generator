@@ -40,7 +40,8 @@ const baseFixture = {
 export const invoiceFixture = (overrides: Partial<Invoice> = {}): Invoice => ({
   ...baseFixture,
   kind: "invoice",
-  transactionDate: "2026-10-31",
+  transactionStart: "2026-10-01",
+  transactionEnd: "2026-10-31",
   dueDate: "2026-11-30",
   ...overrides,
 });
