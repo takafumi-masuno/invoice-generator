@@ -30,6 +30,12 @@ const savedData = (storage: MemoryStorage) => {
   return result.data;
 };
 
+/** 設定タブを開き、読み込みを待つ */
+async function openSettings(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("tab", { name: "設定" }));
+  await screen.findByRole("heading", { name: "設定" });
+}
+
 const jsonFile = (content: string, name = "backup.json") =>
   new File([content], name, { type: "application/json" });
 
@@ -54,9 +60,19 @@ describe("App", () => {
     );
   });
 
+  it("設定は開くまで描画せず、一度開けば書類タブに戻っても残す", async () => {
+    const { user } = setup();
+    expect(screen.queryByRole("textbox", { name: /発行者名/, hidden: true })).toBeNull();
+
+    await openSettings(user);
+    await user.click(screen.getByRole("tab", { name: "書類" }));
+
+    expect(screen.getByRole("textbox", { name: /発行者名/, hidden: true })).toBeInTheDocument();
+  });
+
   it("設定タブで発行者情報を保存すると、ブラウザに保存される", async () => {
     const { user, storage } = setup();
-    await user.click(screen.getByRole("tab", { name: "設定" }));
+    await openSettings(user);
 
     await user.type(screen.getByRole("textbox", { name: /発行者名/ }), "株式会社サンプル");
     await user.click(screen.getByRole("button", { name: "設定を保存" }));
@@ -66,18 +82,18 @@ describe("App", () => {
 
   it("保存前の入力は、タブを切り替えて戻っても消えない", async () => {
     const { user } = setup();
-    await user.click(screen.getByRole("tab", { name: "設定" }));
+    await openSettings(user);
     await user.type(screen.getByRole("textbox", { name: /発行者名/ }), "入力中の会社名");
 
     await user.click(screen.getByRole("tab", { name: "書類" }));
-    await user.click(screen.getByRole("tab", { name: "設定" }));
+    await openSettings(user);
 
     expect(screen.getByRole("textbox", { name: /発行者名/ })).toHaveValue("入力中の会社名");
   });
 
   it("バックアップから復元すると、確認のうえデータ全体を置き換える", async () => {
     const { user, storage } = setup();
-    await user.click(screen.getByRole("tab", { name: "設定" }));
+    await openSettings(user);
     const backup = {
       ...createInitialAppData(),
       settings: {
@@ -98,7 +114,7 @@ describe("App", () => {
 
   it("復元するファイルが正しくなければ、置き換えずに理由を表示する", async () => {
     const { user, storage } = setup();
-    await user.click(screen.getByRole("tab", { name: "設定" }));
+    await openSettings(user);
 
     await user.upload(screen.getByTestId("import-file-input"), jsonFile("{broken", "broken.json"));
 

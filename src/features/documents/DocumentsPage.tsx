@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, useEffect, useRef, useState } from "react";
+import { LazyBoundary } from "@/components/LazyBoundary";
 import { StatusMessage } from "@/components/StatusMessage";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -28,7 +29,9 @@ import { formatDateJa, formatYen } from "@/domain/format";
 import { type BillingDocument, DOCUMENT_KIND_LABELS, type DocumentKind } from "@/domain/schema";
 import type { AppData } from "@/storage/appData";
 import { type AppStore, StorageWriteError } from "@/storage/appStore";
-import { DocumentEditor } from "./DocumentEditor";
+
+// 最初の画面に出ないので、開いたときに読み込む
+const DocumentEditor = lazy(() => import("./DocumentEditor"));
 
 const documentLabel = (document: BillingDocument) =>
   `${DOCUMENT_KIND_LABELS[document.kind]} ${document.number}`;
@@ -69,18 +72,23 @@ export function DocumentsPage({
 
   if (editing) {
     return (
-      <DocumentEditor
-        key={editing.document.id}
-        document={editing.document}
-        documents={data.documents}
-        latestIssuer={issuer}
-        notice={editing.notice}
-        onSave={store.saveDocument}
-        onClose={() => {
-          shouldFocusHeading.current = true;
-          setEditing(null);
-        }}
-      />
+      <LazyBoundary
+        loadingMessage="編集画面を読み込んでいます…"
+        errorMessage="編集画面を読み込めませんでした。ページを再読み込みしてください。"
+      >
+        <DocumentEditor
+          key={editing.document.id}
+          document={editing.document}
+          documents={data.documents}
+          latestIssuer={issuer}
+          notice={editing.notice}
+          onSave={store.saveDocument}
+          onClose={() => {
+            shouldFocusHeading.current = true;
+            setEditing(null);
+          }}
+        />
+      </LazyBoundary>
     );
   }
 

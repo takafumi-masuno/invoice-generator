@@ -106,6 +106,60 @@ test("設定の登録から、見積書の作成、請求書への変換、PDF �
   await expect(page.getByRole("button", { name: /^見積書 .* を開く$/ })).toBeVisible();
 });
 
+test("最初の画面では、編集画面・設定・PDF のコードを読み込まない", async ({ page }) => {
+  const scripts: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "script") scripts.push(request.url());
+  });
+
+  await page.goto("./");
+  await expect(page.getByRole("button", { name: "サンプルで試す" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(scripts.filter((url) => /(DocumentEditor|SettingsPage|PdfPreview)-/.test(url))).toEqual(
+    [],
+  );
+
+  // 別のファイルとして読み込まれることも確かめる（最初のファイルに混ざると上の確認は素通りする）
+  await page.getByRole("tab", { name: "設定" }).click();
+  await expect(page.getByRole("textbox", { name: /発行者名/ })).toBeVisible();
+  expect(scripts.some((url) => url.includes("SettingsPage-"))).toBe(true);
+
+  await page.getByRole("tab", { name: "書類" }).click();
+  await page.getByRole("button", { name: "サンプルで試す" }).click();
+  await expect(page.getByRole("heading", { name: "請求書の編集" })).toBeVisible();
+  expect(scripts.some((url) => url.includes("DocumentEditor-"))).toBe(true);
+});
+
+test("画面の読み込みに失敗しても、理由を表示し、再読み込みで復帰できる", async ({ page }) => {
+  await page.goto("./");
+  await page.route("**/assets/DocumentEditor-*.js", (route) => route.abort());
+
+  await page.getByRole("button", { name: "サンプルで試す" }).click();
+
+  await expect(page.getByRole("alert")).toContainText("編集画面を読み込めませんでした");
+  // 白い画面にならず、ほかの画面は使える
+  await page.getByRole("tab", { name: "設定" }).click();
+  await expect(page.getByRole("textbox", { name: /発行者名/ })).toBeVisible();
+  await page.getByRole("tab", { name: "書類" }).click();
+
+  await page.unroute("**/assets/DocumentEditor-*.js");
+  await page.getByRole("button", { name: "ページを再読み込み" }).click();
+  await page.getByRole("button", { name: "サンプルで試す" }).click();
+  await expect(page.getByRole("heading", { name: "請求書の編集" })).toBeVisible();
+});
+
+test("PDF の読み込みに失敗しても、入力中のフォームは残る", async ({ page }) => {
+  await page.goto("./");
+  await page.route("**/assets/PdfPreview-*.js", (route) => route.abort());
+
+  await page.getByRole("button", { name: "サンプルで試す" }).click();
+
+  await expect(page.getByText(/PDF のプレビューを読み込めませんでした/)).toBeVisible();
+  await page.getByRole("textbox", { name: /宛名/ }).fill("入力中の宛名");
+  await expect(page.getByRole("textbox", { name: /宛名/ })).toHaveValue("入力中の宛名");
+  await expect(page.getByRole("button", { name: "保存" })).toBeEnabled();
+});
+
 test("保存データが壊れていても上書きせず、復旧の案内を出す", async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => localStorage.setItem("invoice-generator:data", "{broken"));

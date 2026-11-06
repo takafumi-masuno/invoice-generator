@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { App } from "@/App";
 import { issuerFixture } from "@/domain/testFixtures";
@@ -29,6 +29,12 @@ export function renderApp(data: AppData | null = dataWithIssuer()) {
     </AppStoreProvider>,
   );
   return { user, storage };
+}
+
+/** ボタンを押して編集画面を開き、読み込みを待つ */
+export async function openEditor(user: ReturnType<typeof userEvent.setup>, buttonName: string) {
+  await user.click(screen.getByRole("button", { name: buttonName }));
+  await screen.findByRole("heading", { name: /の編集$/ });
 }
 
 /** 保存データの書類を読み出す（検証も通す） */

@@ -6,7 +6,7 @@ import type { AppStore } from "@/storage/appStore";
 import { ImportDataButton } from "./ImportDataButton";
 import { SettingsForm } from "./SettingsForm";
 
-export function SettingsPage({ data, store }: { data: AppData; store: AppStore }) {
+export default function SettingsPage({ data, store }: { data: AppData; store: AppStore }) {
   return (
     <div className="flex flex-col gap-6">
       <Card>
