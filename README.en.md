@@ -122,10 +122,10 @@ Lighthouse (first screen of the public page, 2026-11-06, median of five runs):
 
 |         | Performance | Accessibility | Best Practices | SEO |
 | ------- | ----------- | ------------- | -------------- | --- |
-| Mobile  | 83          | 100           | 100            | 100 |
+| Mobile  | 97          | 100           | 100            | 100 |
 | Desktop | 100         | 100           | 100            | 100 |
 
-Mobile Performance varies between runs. It ranged from 78 to 92 across these five runs.
+Mobile Performance depends heavily on the state of the machine running the test. It ranged from 80 to 98 across these five runs, so changes are judged by measuring before and after in turn, not by single values. The medians of seven runs each, before and after lazy loading, were 81 → 87 when the machine was slow and 96 → 97 when it was fast.
 
 Gzipped sizes are about 115 KB of JavaScript for the first screen, about 23 KB loaded when opening the editor or settings, about 468 KB loaded for PDF generation, and about 2.5 MB per font file.
 
