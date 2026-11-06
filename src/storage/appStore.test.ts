@@ -1,21 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { issuerFixture } from "@/domain/testFixtures";
+import { MemoryStorage } from "@/test/memoryStorage";
 import { createInitialAppData, serializeAppData } from "./appData";
-import { createAppStore, STORAGE_KEY, type StorageLike, StorageWriteError } from "./appStore";
-
-class MemoryStorage implements StorageLike {
-  readonly items = new Map<string, string>();
-  failOnSet: Error | null = null;
-
-  getItem(key: string): string | null {
-    return this.items.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    if (this.failOnSet) throw this.failOnSet;
-    this.items.set(key, value);
-  }
-}
+import { createAppStore, STORAGE_KEY, StorageWriteError } from "./appStore";
 
 const settingsFixture = () => ({
   issuer: issuerFixture(),
