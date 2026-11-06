@@ -8,8 +8,10 @@
 ## 技術構成
 
 - Vite / React / TypeScript
+- Tailwind CSS / shadcn/ui（Radix UI）
+- React Hook Form / Valibot（フォームと入力チェック）
 - @react-pdf/renderer（PDF 生成）
-- Vitest（テスト）/ Biome（lint・フォーマット）
+- Vitest / React Testing Library（テスト）/ Biome（lint・フォーマット）
 - GitHub Actions（CI と GitHub Pages へのデプロイ）
 
 ## 開発
@@ -29,3 +31,21 @@ pnpm build      # 本番ビルド（dist/）
 
 - フォントは [BIZ UDPゴシック](https://fonts.google.com/specimen/BIZ+UDPGothic)（SIL Open Font License 1.1、`public/fonts/OFL.txt`）を使用しています。
 - react-pdf は半角スペースでしか改行しないため、日本語の文字の間に改行位置を作り、禁則処理（句読点や閉じ括弧を行頭に置かない など）を行っています。詳しくは `src/pdf/lineBreak.ts` を参照してください。
+
+## データの保存
+
+- データはブラウザの localStorage の1つのキー（`invoice-generator:data`）に、バージョン付きの JSON で保存します。外部には送信しません。
+- 読み込むときに Valibot で内容を検証します。読み込めないデータ（壊れている、形式が違う、新しいバージョンのアプリで作られた）は上書きせず、画面から元のデータをファイルに保存したうえで、バックアップからの復元か初期化を選べます。
+- 設定画面から、データ全体をバックアップ（JSON ファイル）として保存・復元できます。復元するファイルも同じ方法で検証します。
+- 保存データの形を変えるときは、`src/storage/appData.ts` の `CURRENT_VERSION` を上げ、`migrate()` に古い形からの変換を追加します。
+
+```jsonc
+{
+  "version": 1,
+  "settings": {
+    "issuer": { "name": "株式会社サンプル", "registrationNumber": "T1234567890123", "...": "..." },
+    "rounding": { "lineAmount": "down", "tax": "down" } // down: 切捨て / up: 切上げ / halfUp: 四捨五入
+  },
+  "documents": [] // 見積書・請求書
+}
+```

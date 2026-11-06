@@ -13,11 +13,19 @@ export default function SamplePdfPreview() {
   return (
     <>
       <p>
-        <a href={instance.url} download="sample.pdf">
+        <a
+          href={instance.url}
+          download="sample.pdf"
+          className="text-primary underline underline-offset-4"
+        >
           検証用 PDF をダウンロード
         </a>
       </p>
-      <iframe className="pdf-frame" src={instance.url} title="検証用 PDF のプレビュー" />
+      <iframe
+        className="h-[70vh] w-full rounded-md border bg-white"
+        src={instance.url}
+        title="検証用 PDF のプレビュー"
+      />
     </>
   );
 }

@@ -27,6 +27,9 @@ const requiredText = (label: string, max: number) =>
 const optionalText = (label: string, max: number) =>
   v.pipe(v.string(), v.trim(), v.maxLength(max, `${label}は${max}文字以内で入力してください`));
 
+/** 全角の英数字・記号を半角にそろえる（Ｔ１２３ → T123、１２３－４５６７ → 123-4567） */
+export const toHalfWidth = (value: string): string => value.normalize("NFKC");
+
 /** YYYY-MM-DD 形式で、実在する日付か（isoDate は 2月30日 なども通すため自前で確認する） */
 export function isValidDate(value: string): boolean {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -78,6 +81,7 @@ export const IssuerSchema = v.object({
   registrationNumber: v.pipe(
     v.string(),
     v.trim(),
+    v.transform((value) => toHalfWidth(value).toUpperCase()),
     v.check(
       (value) => value === "" || REGISTRATION_NUMBER_PATTERN.test(value),
       "登録番号は T と13桁の数字で入力してください（例: T1234567890123）",
@@ -86,13 +90,14 @@ export const IssuerSchema = v.object({
   postalCode: v.pipe(
     v.string(),
     v.trim(),
+    v.transform(toHalfWidth),
     v.check(
       (value) => value === "" || /^\d{3}-?\d{4}$/.test(value),
       "郵便番号は7桁の数字で入力してください（例: 123-4567）",
     ),
   ),
   address: optionalText("住所", 200),
-  phone: optionalText("電話番号", 30),
+  phone: v.pipe(optionalText("電話番号", 30), v.transform(toHalfWidth)),
   email: v.pipe(
     v.string(),
     v.trim(),
