@@ -112,12 +112,14 @@ GitHub Actions runs these on every push:
 - End-to-end tests with Playwright, which check the text of downloaded PDFs
 - Accessibility checks with axe on the list, settings, editor, input errors, and confirmation dialog, at desktop and phone widths
 
-Lighthouse (first screen of the public page, 2026-11-06):
+Lighthouse (first screen of the public page, 2026-11-06, median of five runs):
 
 |         | Performance | Accessibility | Best Practices | SEO |
 | ------- | ----------- | ------------- | -------------- | --- |
-| Mobile  | 92          | 100           | 100            | 100 |
+| Mobile  | 83          | 100           | 100            | 100 |
 | Desktop | 100         | 100           | 100            | 100 |
+
+Mobile Performance varies between runs. It ranged from 78 to 92 across these five runs.
 
 Gzipped sizes are about 134 KB of JavaScript for the first screen, about 468 KB of lazy-loaded JavaScript for PDF generation, and about 2.5 MB per font file. About half of the first-screen JavaScript is react-dom, and the settings form is needed from the start, so it is not split further.
 
