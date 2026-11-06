@@ -6,6 +6,9 @@ const BASE_URL = "http://localhost:4173/invoice-generator/";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // PDF の生成は重く、並列で実行すると標準の待ち時間（30秒と5秒）では足りないことがある
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",

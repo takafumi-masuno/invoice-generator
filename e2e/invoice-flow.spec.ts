@@ -35,17 +35,19 @@ test("サンプルの請求書を1クリックで開き、PDF をダウンロー
 });
 
 test("入力の直後は古い PDF をダウンロードできず、更新後の内容が出力される", async ({ page }) => {
+  await page.clock.install();
   await page.goto("./");
   await page.getByRole("button", { name: "サンプルで試す" }).click();
   await expect(page.getByRole("link", { name: "PDF をダウンロード" })).toBeVisible();
 
+  // プレビューの更新は入力の 0.6 秒後に始まる。時計を止めて、更新が始まる前の状態を確かめる
+  await page.clock.pauseAt(Date.now() + 60_000);
   await page.getByRole("textbox", { name: /宛名/ }).fill("変更後の宛先株式会社");
 
-  // プレビューの更新が始まる（入力の 0.6 秒後）より前に、リンクが消えていること
-  await expect(page.getByRole("link", { name: "PDF をダウンロード" })).toHaveCount(0, {
-    timeout: 300,
-  });
+  await expect(page.getByRole("link", { name: "PDF をダウンロード" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "PDF を更新しています…" })).toBeDisabled();
+
+  await page.clock.resume();
   const text = await downloadPdfText(page);
   expect(text).toContain("変更後の宛先株式会社御中");
 });
