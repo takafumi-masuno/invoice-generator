@@ -1,11 +1,8 @@
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useEffect, useState } from "react";
-import {
-  type FieldError as HookFormFieldError,
-  type UseFormRegisterReturn,
-  useForm,
-} from "react-hook-form";
+import { type UseFormRegisterReturn, useForm } from "react-hook-form";
 import * as v from "valibot";
+import { TextField } from "@/components/TextField";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +14,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { ROUNDING_MODE_LABELS, ROUNDING_MODES } from "@/domain/rounding";
@@ -194,45 +190,6 @@ export function SettingsForm({
         </Button>
       </div>
     </form>
-  );
-}
-
-function TextField({
-  id,
-  label,
-  description,
-  required,
-  registration,
-  error,
-  ...inputProps
-}: {
-  id: string;
-  label: string;
-  description?: string;
-  required?: boolean;
-  registration: UseFormRegisterReturn;
-  error?: HookFormFieldError;
-} & Pick<React.ComponentProps<"input">, "type" | "placeholder" | "autoComplete">) {
-  const describedBy = [description && `${id}-description`, error && `${id}-error`]
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor={id}>
-        {label}
-        {required && <span className="text-destructive">（必須）</span>}
-      </FieldLabel>
-      <Input
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-required={required}
-        aria-describedby={describedBy || undefined}
-        {...inputProps}
-        {...registration}
-      />
-      {description && <FieldDescription id={`${id}-description`}>{description}</FieldDescription>}
-      <FieldError id={`${id}-error`} errors={[error]} />
-    </Field>
   );
 }
 
