@@ -1,15 +1,24 @@
-import { useRef, useState } from "react";
+import { lazy, useRef, useState } from "react";
 import { AppFooter } from "@/components/AppFooter";
+import { LazyBoundary } from "@/components/LazyBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentsPage } from "@/features/documents/DocumentsPage";
-import { SettingsPage } from "@/features/settings/SettingsPage";
 import { StorageErrorPanel } from "@/features/settings/StorageErrorPanel";
 import { useAppStore } from "@/storage/AppStoreContext";
+
+// 最初の画面に出ないので、開いたときに読み込む
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 
 export function App() {
   const { store, state } = useAppStore();
   const [tab, setTab] = useState("documents");
+  const [settingsVisited, setSettingsVisited] = useState(false);
   const settingsTabRef = useRef<HTMLButtonElement>(null);
+
+  const changeTab = (next: string) => {
+    setTab(next);
+    if (next === "settings") setSettingsVisited(true);
+  };
 
   return (
     <div className="flex min-h-svh flex-col bg-muted/40">
@@ -27,7 +36,7 @@ export function App() {
           <StorageErrorPanel message={state.message} raw={state.raw} store={store} />
         )}
 
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={tab} onValueChange={changeTab}>
           <TabsList>
             <TabsTrigger value="documents">書類</TabsTrigger>
             <TabsTrigger ref={settingsTabRef} value="settings">
@@ -35,7 +44,7 @@ export function App() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Radix の Tabs は非表示のタブを破棄するため、保存前の入力が消えないよう常に描画して隠す */}
+          {/* Radix の Tabs は非表示のタブを破棄するため、保存前の入力が消えないよう描画したまま隠す */}
           <TabsContent value="documents" forceMount className="data-[state=inactive]:hidden">
             {state.status === "ready" ? (
               <DocumentsPage
@@ -43,7 +52,7 @@ export function App() {
                 store={store}
                 onOpenSettings={() => {
                   // 押したボタンは書類タブごと隠れるので、フォーカスを設定タブへ移す
-                  setTab("settings");
+                  changeTab("settings");
                   settingsTabRef.current?.focus();
                 }}
               />
@@ -54,9 +63,16 @@ export function App() {
 
           <TabsContent value="settings" forceMount className="data-[state=inactive]:hidden">
             {state.status === "ready" ? (
-              <div className="max-w-4xl">
-                <SettingsPage data={state.data} store={store} />
-              </div>
+              settingsVisited && (
+                <div className="max-w-4xl">
+                  <LazyBoundary
+                    loadingMessage="設定を読み込んでいます…"
+                    errorMessage="設定を読み込めませんでした。ページを再読み込みしてください。"
+                  >
+                    <SettingsPage data={state.data} store={store} />
+                  </LazyBoundary>
+                </div>
+              )
             ) : (
               <UnavailableMessage />
             )}

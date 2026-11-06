@@ -92,6 +92,12 @@ react-pdf is not designed for Japanese typesetting, so the app handles the follo
 
 Web fonts are often subset to the characters in use, but recipient names can contain rare kanji. Instead, only the hinting data is removed. This cuts the gzipped size by about 19% and leaves the characters, glyphs, and widths unchanged.
 
+### Code that is not on the first screen is lazy-loaded
+
+Total Blocking Time accounted for nearly all of the lost points in the mobile Lighthouse score. The editor and settings are therefore split out and loaded when opened. The first time they open takes longer (with a 4x slower CPU at 1.6 Mbps, 0.1 to 0.7 seconds longer for settings and 0.5 to 1.1 seconds longer for the editor). Preloading the code during idle time was also measured, but it lost about half of the Total Blocking Time improvement, so it is not used.
+
+Loading can fail in an old tab right after a new deployment. To keep the whole screen from going blank, only the failed part shows the reason and a reload button. If the PDF preview fails, the form stays usable with its current input.
+
 ## Technology choices
 
 | Technology                                  | Why                                                                                                |
@@ -121,7 +127,7 @@ Lighthouse (first screen of the public page, 2026-11-06, median of five runs):
 
 Mobile Performance varies between runs. It ranged from 78 to 92 across these five runs.
 
-Gzipped sizes are about 134 KB of JavaScript for the first screen, about 468 KB of lazy-loaded JavaScript for PDF generation, and about 2.5 MB per font file. About half of the first-screen JavaScript is react-dom, and the settings form is needed from the start, so it is not split further.
+Gzipped sizes are about 115 KB of JavaScript for the first screen, about 23 KB loaded when opening the editor or settings, about 468 KB loaded for PDF generation, and about 2.5 MB per font file.
 
 ### Known limitations
 

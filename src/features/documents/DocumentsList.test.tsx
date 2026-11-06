@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { estimateFixture, invoiceFixture, issuerFixture } from "@/domain/testFixtures";
-import { dataWithIssuer, renderApp, savedDocuments } from "@/test/renderApp";
+import { dataWithIssuer, openEditor, renderApp, savedDocuments } from "@/test/renderApp";
 
 // PDF の生成はこのテストの対象外（内容は BillingDocumentPdf.test.tsx で確認する）
 vi.mock("./PdfPreview", () => ({ default: () => <p>PDF のプレビュー</p> }));
@@ -140,7 +140,7 @@ describe("一覧", () => {
   it("複製は編集画面で開き、保存するまで一覧に増えない", async () => {
     const { user, storage } = renderApp(dataWithDocuments());
 
-    await user.click(button("請求書 I-1 を複製"));
+    await openEditor(user, "請求書 I-1 を複製");
 
     expect(screen.getByText(/請求書 I-1 を複製しました/)).toBeInTheDocument();
     expect(textbox(/宛名/)).toHaveValue("株式会社テスト");
@@ -157,7 +157,7 @@ describe("一覧", () => {
       screen.queryByRole("button", { name: "請求書 I-1 を請求書に変換" }),
     ).not.toBeInTheDocument();
 
-    await user.click(button("見積書 Q-1 を請求書に変換"));
+    await openEditor(user, "見積書 Q-1 を請求書に変換");
 
     expect(screen.getByRole("heading", { name: "請求書の編集" })).toBeInTheDocument();
     expect(textbox(/宛名/)).toHaveValue("株式会社見積先");
@@ -176,7 +176,7 @@ describe("サンプル", () => {
   it("発行者が未登録でも、サンプルの請求書を開ける（保存するまで残らない）", async () => {
     const { user, storage } = renderApp(null);
 
-    await user.click(button("サンプルで試す"));
+    await openEditor(user, "サンプルで試す");
 
     expect(screen.getByText(/サンプルの請求書です/)).toBeInTheDocument();
     expect(textbox(/宛名/)).toHaveValue("株式会社サンプル商事");
@@ -196,7 +196,7 @@ describe("番号の重複", () => {
       ],
     });
 
-    await user.click(button("請求書 I-2 を開く"));
+    await openEditor(user, "請求書 I-2 を開く");
     await user.clear(textbox(/^番号/));
     await user.type(textbox(/^番号/), "I-1");
     await user.click(button("保存"));
@@ -209,7 +209,7 @@ describe("番号の重複", () => {
   it("自分自身の番号のまま保存できる", async () => {
     const { user } = renderApp(dataWithDocuments());
 
-    await user.click(button("請求書 I-1 を開く"));
+    await openEditor(user, "請求書 I-1 を開く");
     await user.click(button("保存"));
 
     expect(await screen.findByText("請求書を保存しました")).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe("発行者の更新", () => {
     };
     const { user, storage } = renderApp(data);
 
-    await user.click(button("請求書 I-1 を開く"));
+    await openEditor(user, "請求書 I-1 を開く");
     expect(screen.getByText("この書類の発行者: 古い社名")).toBeInTheDocument();
 
     await user.click(button("現在の設定の内容に更新"));
@@ -238,7 +238,7 @@ describe("発行者の更新", () => {
   it("設定と同じなら、更新の案内は出さない", async () => {
     const { user } = renderApp(dataWithDocuments());
 
-    await user.click(button("請求書 I-1 を開く"));
+    await openEditor(user, "請求書 I-1 を開く");
 
     expect(
       screen.queryByRole("button", { name: "現在の設定の内容に更新" }),

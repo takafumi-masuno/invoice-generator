@@ -3,7 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import type userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { invoiceFixture, issuerFixture, lineItemFixture } from "@/domain/testFixtures";
-import { dataWithIssuer, renderApp, savedDocuments } from "@/test/renderApp";
+import { dataWithIssuer, openEditor, renderApp, savedDocuments } from "@/test/renderApp";
 
 // PDF の生成はこのテストの対象外（内容は BillingDocumentPdf.test.tsx で確認する）
 vi.mock("./PdfPreview", () => ({ default: () => <p>PDF のプレビュー</p> }));
@@ -28,12 +28,12 @@ describe("書類の作成", () => {
     await user.click(button("設定を開く"));
 
     expect(screen.getByRole("tab", { name: "設定" })).toHaveAttribute("aria-selected", "true");
-    expect(textbox(/発行者名/)).toBeVisible();
+    expect(await screen.findByRole("textbox", { name: /発行者名/ })).toBeVisible();
   });
 
   it("請求書を作成して保存すると、一覧に表示され、開き直せる", async () => {
     const { user, storage } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     await fillInvoice(user);
 
     await user.click(button("保存"));
@@ -49,13 +49,13 @@ describe("書類の作成", () => {
     expect(saved.items[0]).toMatchObject({ quantity: 1, unitPrice: 100000, taxRate: 10 });
 
     await user.click(button("一覧に戻る"));
-    await user.click(button(`請求書 ${saved.number} を開く`));
+    await openEditor(user, `請求書 ${saved.number} を開く`);
     expect(textbox(/宛名/)).toHaveValue("株式会社テスト");
   });
 
   it("必須項目が空なら保存せず、エラーを表示する", async () => {
     const { user, storage } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
 
     await user.click(button("保存"));
 
@@ -67,7 +67,7 @@ describe("書類の作成", () => {
 
   it("明細の入力に合わせて、税率ごとの合計がすぐに変わる", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     await user.clear(spinbutton("1行目の単価（税抜）"));
     await user.type(spinbutton("1行目の単価（税抜）"), "11345");
 
@@ -85,7 +85,7 @@ describe("書類の作成", () => {
 
   it("単価を空欄にしても画面が壊れない（0円として表示する）", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
 
     await user.clear(spinbutton("1行目の単価（税抜）"));
 
@@ -94,7 +94,7 @@ describe("書類の作成", () => {
 
   it("明細を追加・削除できる（最後の1行は削除できない）", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     expect(button("1行目を削除")).toBeDisabled();
 
     await user.click(button("明細を追加"));
@@ -107,7 +107,7 @@ describe("書類の作成", () => {
 
   it("登録番号がない発行者の請求書には、記載事項の不足を警告する（保存はできる）", async () => {
     const { user, storage } = renderApp(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     await fillInvoice(user);
 
     expect(screen.getByText("適格請求書の記載事項が不足しています")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("書類の作成", () => {
 
   it("見積書には取引年月日の欄がなく、警告も出ない", async () => {
     const { user, storage } = renderApp(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
-    await user.click(button("新しい見積書"));
+    await openEditor(user, "新しい見積書");
 
     expect(screen.queryByLabelText(/取引年月日/)).not.toBeInTheDocument();
     expect(screen.queryByText("適格請求書の記載事項が不足しています")).not.toBeInTheDocument();
@@ -134,7 +134,7 @@ describe("書類の作成", () => {
 
   it("保存していない変更があるときは、戻る前に確認する", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     await user.type(textbox(/宛名/), "入力中");
 
     await user.click(button("一覧に戻る"));
@@ -153,7 +153,7 @@ describe("書類の作成", () => {
 
   it("変更がなければ、確認なしで戻れる", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
 
     await user.click(button("一覧に戻る"));
 
@@ -163,10 +163,11 @@ describe("書類の作成", () => {
 
   it("編集中にタブを切り替えても、入力は消えない", async () => {
     const { user } = renderApp();
-    await user.click(button("新しい請求書"));
+    await openEditor(user, "新しい請求書");
     await user.type(textbox(/宛名/), "入力中の宛名");
 
     await user.click(screen.getByRole("tab", { name: "設定" }));
+    await screen.findByRole("heading", { name: "設定" });
     await user.click(screen.getByRole("tab", { name: "書類" }));
 
     expect(textbox(/宛名/)).toHaveValue("入力中の宛名");
@@ -185,7 +186,7 @@ describe("書類の作成", () => {
     };
     const { user, storage } = renderApp(data);
 
-    await user.click(button("請求書 I-1 を開く"));
+    await openEditor(user, "請求書 I-1 を開く");
     await user.type(textbox("件名"), "（修正）");
     await user.click(button("保存"));
 

@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { LazyBoundary } from "@/components/LazyBoundary";
 import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -48,7 +49,7 @@ const PREVIEW_DEBOUNCE_MS = 600;
 
 type Status = { type: "success" | "error"; message: string } | null;
 
-export function DocumentEditor({
+export default function DocumentEditor({
   document,
   documents,
   latestIssuer,
@@ -374,11 +375,13 @@ export function DocumentEditor({
         </form>
 
         <section aria-label="PDF のプレビュー" className="min-w-0 lg:sticky lg:top-4">
-          <Suspense
-            fallback={<p className="text-sm text-muted-foreground">PDF を準備しています…</p>}
+          {/* ここで失敗しても入力を保存できるよう、境界はプレビューだけを囲む */}
+          <LazyBoundary
+            loadingMessage="PDF を準備しています…"
+            errorMessage="PDF のプレビューを読み込めませんでした。再読み込みすると保存していない入力は失われるので、先に保存してください。"
           >
             <PdfPreview doc={previewDocument} outdated={previewDocument !== current} />
-          </Suspense>
+          </LazyBoundary>
         </section>
       </div>
 
