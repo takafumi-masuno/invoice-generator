@@ -53,7 +53,8 @@ export function App() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings">
+          {/* Radix の Tabs は非表示のタブを破棄するため、保存前の入力が消えないよう常に描画して隠す */}
+          <TabsContent value="settings" forceMount className="data-[state=inactive]:hidden">
             {state.status === "ready" ? (
               <SettingsPage data={state.data} store={store} />
             ) : (

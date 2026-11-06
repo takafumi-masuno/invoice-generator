@@ -147,7 +147,11 @@ export function SettingsForm({
               rows={3}
               placeholder={"〇〇銀行 〇〇支店 普通 1234567\n口座名義 カ）サンプル"}
               aria-invalid={errors.issuer?.bankAccount ? true : undefined}
-              aria-describedby="issuer-bank-account-description issuer-bank-account-error"
+              aria-describedby={
+                errors.issuer?.bankAccount
+                  ? "issuer-bank-account-description issuer-bank-account-error"
+                  : "issuer-bank-account-description"
+              }
               {...form.register("issuer.bankAccount")}
             />
             <FieldDescription id="issuer-bank-account-description">
