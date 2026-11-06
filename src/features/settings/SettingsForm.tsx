@@ -2,8 +2,8 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useEffect, useState } from "react";
 import { type UseFormRegisterReturn, useForm } from "react-hook-form";
 import * as v from "valibot";
+import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -180,11 +180,7 @@ export function SettingsForm({
       </FieldSet>
 
       <div className="flex flex-col gap-3">
-        {status && (
-          <Alert variant={status.type === "error" ? "destructive" : "default"} role="status">
-            <AlertDescription>{status.message}</AlertDescription>
-          </Alert>
-        )}
+        <StatusMessage type={status?.type} message={status?.message} />
         <Button type="submit" disabled={isSubmitting} className="self-start">
           設定を保存
         </Button>

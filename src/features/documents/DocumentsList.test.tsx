@@ -22,6 +22,76 @@ const dataWithDocuments = (issuer = issuerFixture()) => ({
   ],
 });
 
+describe("フォーカスの移動", () => {
+  it("編集画面を開くと見出しへ、閉じると一覧の見出しへ移る", async () => {
+    const { user } = renderApp(dataWithDocuments());
+
+    await user.click(button("請求書 I-1 を開く"));
+    expect(await screen.findByRole("heading", { name: "請求書の編集" })).toHaveFocus();
+
+    await user.click(button("一覧に戻る"));
+    expect(screen.getByRole("heading", { name: "書類" })).toHaveFocus();
+  });
+
+  it("保存せずに戻ることを確認したあとも、一覧の見出しへ移る", async () => {
+    const { user } = renderApp(dataWithDocuments());
+    await user.click(button("請求書 I-1 を開く"));
+    await user.type(await screen.findByRole("textbox", { name: "件名" }), "変更");
+
+    await user.click(button("一覧に戻る"));
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "保存せずに戻る",
+      }),
+    );
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: "書類" })).toHaveFocus());
+  });
+
+  it("書類を削除すると、一覧の見出しへ移る", async () => {
+    const { user } = renderApp(dataWithDocuments());
+
+    await user.click(button("請求書 I-1 を削除"));
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "削除する" }),
+    );
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: "書類" })).toHaveFocus());
+  });
+
+  it("削除をキャンセルすると、押したボタンへ戻る", async () => {
+    const { user } = renderApp(dataWithDocuments());
+    await user.click(button("請求書 I-1 を削除"));
+
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "キャンセル" }),
+    );
+
+    await waitFor(() => expect(button("請求書 I-1 を削除")).toHaveFocus());
+  });
+
+  it("保存せずに戻る確認で「編集を続ける」を選ぶと、「一覧に戻る」へ戻る", async () => {
+    const { user } = renderApp(dataWithDocuments());
+    await user.click(button("請求書 I-1 を開く"));
+    await user.type(await screen.findByRole("textbox", { name: "件名" }), "変更");
+    await user.click(button("一覧に戻る"));
+
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "編集を続ける" }),
+    );
+
+    await waitFor(() => expect(button("一覧に戻る")).toHaveFocus());
+  });
+
+  it("「設定を開く」で設定タブへ移る", async () => {
+    const { user } = renderApp(null);
+
+    await user.click(button("設定を開く"));
+
+    expect(screen.getByRole("tab", { name: "設定" })).toHaveFocus();
+  });
+});
+
 describe("一覧", () => {
   it("番号・宛名・件名で検索できる", async () => {
     const { user } = renderApp(dataWithDocuments());

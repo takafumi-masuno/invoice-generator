@@ -87,7 +87,9 @@ export function StorageErrorPanel({
                 </AlertDialogContent>
               </AlertDialog>
             </div>
-            {resetError && <p role="status">{resetError}</p>}
+            <p role="status" className="contents">
+              {resetError}
+            </p>
           </>
         )}
       </AlertDescription>
