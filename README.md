@@ -25,11 +25,12 @@ pnpm test       # Vitest
 pnpm build      # 本番ビルド（dist/）
 ```
 
-`PDF_OUTPUT=<出力先パス> pnpm test` で、検証用の PDF をファイルに書き出せます。
+`PDF_OUTPUT=<出力先パス> pnpm test` で、テストで生成した PDF をファイルに書き出せます（`-t` でテストを絞ると、そのテストの PDF になります）。
 
 ## 日本語 PDF の扱い
 
 - フォントは [BIZ UDPゴシック](https://fonts.google.com/specimen/BIZ+UDPGothic)（SIL Open Font License 1.1、`public/fonts/OFL.txt`）を使用しています。
+- 生成した PDF の文字を `pdfjs-dist` で取り出し、適格請求書の記載事項が実際に出力されていることをテストしています。
 - react-pdf は半角スペースでしか改行しないため、日本語の文字の間に改行位置を作り、禁則処理（句読点や閉じ括弧を行頭に置かない など）を行っています。詳しくは `src/pdf/lineBreak.ts` を参照してください。
 
 ## データの保存
