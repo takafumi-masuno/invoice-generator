@@ -11,7 +11,7 @@
 - Tailwind CSS / shadcn/ui（Radix UI）
 - React Hook Form / Valibot（フォームと入力チェック）
 - @react-pdf/renderer（PDF 生成）
-- Vitest / React Testing Library（テスト）/ Biome（lint・フォーマット）
+- Vitest / React Testing Library / Playwright（テスト）/ Biome（lint・フォーマット）
 - GitHub Actions（CI と GitHub Pages へのデプロイ）
 
 ## 開発
@@ -22,6 +22,7 @@ pnpm dev        # 開発サーバー
 pnpm lint       # Biome
 pnpm typecheck  # TypeScript
 pnpm test       # Vitest
+pnpm test:e2e   # Playwright（先に pnpm build を実行し、初回は pnpm exec playwright install chromium）
 pnpm build      # 本番ビルド（dist/）
 ```
 
