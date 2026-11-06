@@ -10,7 +10,7 @@ import { MemoryStorage } from "@/test/memoryStorage";
 import { App } from "./App";
 
 // PDF の生成はこのテストの対象外（jsdom では重いため）
-vi.mock("./pdf/SamplePdfPreview", () => ({ default: () => <p>検証用 PDF</p> }));
+vi.mock("./features/documents/PdfPreview", () => ({ default: () => <p>PDF のプレビュー</p> }));
 
 function setup(storage = new MemoryStorage()) {
   const user = userEvent.setup();
