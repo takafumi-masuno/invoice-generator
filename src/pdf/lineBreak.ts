@@ -18,14 +18,8 @@
  * 次の単位が行頭禁則の文字で始まることは、句読点や括弧が直前の単位に含まれるためほぼ起きない。
  */
 
-const SPACE = " ";
-const NBSP = String.fromCodePoint(0xa0);
+export const NBSP = String.fromCodePoint(0xa0);
 const BREAK = "";
-
-/** PDF に出す文字列の半角スペースを NBSP に置き換える（理由は冒頭のコメント） */
-export function toPdfText(text: string): string {
-  return text.replaceAll(SPACE, NBSP);
-}
 
 /** 日本語として1文字ずつ改行してよい文字（漢字・かな・全角の記号と英数字など） */
 const CJK_CHAR =

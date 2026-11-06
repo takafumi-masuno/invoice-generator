@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { StatusMessage } from "@/components/StatusMessage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,11 +79,7 @@ export function ImportDataButton({
       >
         バックアップから復元
       </Button>
-      {message && (
-        <Alert variant={message.type === "error" ? "destructive" : "default"} role="status">
-          <AlertDescription>{message.text}</AlertDescription>
-        </Alert>
-      )}
+      <StatusMessage type={message?.type} message={message?.text} />
 
       <AlertDialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialogContent>

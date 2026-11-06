@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentsPage } from "@/features/documents/DocumentsPage";
 import { SettingsPage } from "@/features/settings/SettingsPage";
@@ -8,6 +8,7 @@ import { useAppStore } from "@/storage/AppStoreContext";
 export function App() {
   const { store, state } = useAppStore();
   const [tab, setTab] = useState("documents");
+  const settingsTabRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="min-h-svh bg-muted/40">
@@ -28,7 +29,9 @@ export function App() {
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="documents">書類</TabsTrigger>
-            <TabsTrigger value="settings">設定</TabsTrigger>
+            <TabsTrigger ref={settingsTabRef} value="settings">
+              設定
+            </TabsTrigger>
           </TabsList>
 
           {/* Radix の Tabs は非表示のタブを破棄するため、保存前の入力が消えないよう常に描画して隠す */}
@@ -37,7 +40,11 @@ export function App() {
               <DocumentsPage
                 data={state.data}
                 store={store}
-                onOpenSettings={() => setTab("settings")}
+                onOpenSettings={() => {
+                  // 押したボタンは書類タブごと隠れるので、フォーカスを設定タブへ移す
+                  setTab("settings");
+                  settingsTabRef.current?.focus();
+                }}
               />
             ) : (
               <UnavailableMessage />
@@ -46,7 +53,7 @@ export function App() {
 
           <TabsContent value="settings" forceMount className="data-[state=inactive]:hidden">
             {state.status === "ready" ? (
-              <div className="mx-auto max-w-4xl">
+              <div className="max-w-4xl">
                 <SettingsPage data={state.data} store={store} />
               </div>
             ) : (

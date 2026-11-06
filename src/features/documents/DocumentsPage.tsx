@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { StatusMessage } from "@/components/StatusMessage";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -49,6 +50,22 @@ export function DocumentsPage({
   const [query, setQuery] = useState("");
   const [kindFilter, setKindFilter] = useState<DocumentKind | "all">("all");
   const { issuer, rounding } = data.settings;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  /** 編集画面を閉じたときや削除したあと、一覧の見出しへフォーカスを移すか */
+  const shouldFocusHeading = useRef(false);
+
+  const focusHeadingIfNeeded = () => {
+    if (!shouldFocusHeading.current) return false;
+    shouldFocusHeading.current = false;
+    headingRef.current?.focus();
+    return true;
+  };
+
+  // 編集画面を閉じると押したボタンも消えてフォーカスが失われるので、一覧の見出しへ移す
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 一覧に戻ったときに実行する
+  useEffect(() => {
+    if (!editing) focusHeadingIfNeeded();
+  }, [editing]);
 
   if (editing) {
     return (
@@ -59,7 +76,10 @@ export function DocumentsPage({
         latestIssuer={issuer}
         notice={editing.notice}
         onSave={store.saveDocument}
-        onClose={() => setEditing(null)}
+        onClose={() => {
+          shouldFocusHeading.current = true;
+          setEditing(null);
+        }}
       />
     );
   }
@@ -103,6 +123,8 @@ export function DocumentsPage({
     try {
       store.deleteDocument(deleting.id);
       setDeleteError(null);
+      // 削除ボタンは行ごと消えるので、ダイアログが閉じたあと見出しへ移す
+      shouldFocusHeading.current = true;
     } catch (error) {
       if (!(error instanceof StorageWriteError)) throw error;
       setDeleteError(error.message);
@@ -113,7 +135,7 @@ export function DocumentsPage({
   const visibleDocuments = filterDocuments(data.documents, { query, kind: kindFilter });
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex max-w-4xl flex-col gap-6">
       {issuer ? (
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={() => startNew("invoice")}>
@@ -127,7 +149,7 @@ export function DocumentsPage({
           </Button>
         </div>
       ) : (
-        <Alert>
+        <Alert role="note">
           <AlertTitle>まずはサンプルで試せます</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
             <p>
@@ -150,7 +172,9 @@ export function DocumentsPage({
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>書類</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="outline-none">
+              書類
+            </h2>
           </CardTitle>
           {data.documents.length === 0 && (
             <CardDescription>保存した見積書・請求書がここに表示されます。</CardDescription>
@@ -184,11 +208,7 @@ export function DocumentsPage({
               </NativeSelect>
             </search>
 
-            {deleteError && (
-              <Alert variant="destructive" role="status">
-                <AlertDescription>{deleteError}</AlertDescription>
-              </Alert>
-            )}
+            <StatusMessage type="error" message={deleteError ?? undefined} />
 
             {visibleDocuments.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
@@ -261,7 +281,11 @@ export function DocumentsPage({
       </Card>
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            if (focusHeadingIfNeeded()) event.preventDefault();
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>{`${deleting ? documentLabel(deleting) : ""} を削除しますか？`}</AlertDialogTitle>
             <AlertDialogDescription>

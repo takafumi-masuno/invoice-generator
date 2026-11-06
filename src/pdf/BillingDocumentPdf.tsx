@@ -3,7 +3,7 @@ import { calculateTotals, isReducedRate } from "@/domain/calc";
 import { formatDateJa, formatQuantity, formatTransactionPeriod, formatYen } from "@/domain/format";
 import { type BillingDocument, DOCUMENT_KIND_LABELS } from "@/domain/schema";
 import { PDF_FONT_FAMILY } from "./fonts";
-import { toPdfText } from "./lineBreak";
+import { toPdfText } from "./pdfText";
 
 /** A4 の高さ（pt） */
 const A4_HEIGHT = 841.89;

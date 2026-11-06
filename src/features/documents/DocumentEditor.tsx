@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -74,6 +75,12 @@ export function DocumentEditor({
   const { errors, isDirty } = formState;
   const [status, setStatus] = useState<Status>(null);
   const [confirmingClose, setConfirmingClose] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // 押したボタンは一覧ごと消えてフォーカスが失われるので、編集画面の見出しへ移す
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
 
   // 初期値にすべての項目があるため、監視する値も常にすべての項目を持つ
   const values = useWatch({ control }) as DocumentFormValues;
@@ -119,7 +126,9 @@ export function DocumentEditor({
           <ArrowLeft aria-hidden="true" />
           一覧に戻る
         </Button>
-        <h2 className="font-bold">{`${title}の編集`}</h2>
+        <h2 ref={headingRef} tabIndex={-1} className="font-bold outline-none">
+          {`${title}の編集`}
+        </h2>
       </div>
 
       {notice && (
@@ -129,7 +138,7 @@ export function DocumentEditor({
       )}
 
       {canUpdateIssuer && latestIssuer && (
-        <Alert>
+        <Alert role="note">
           <AlertTitle>発行者の情報が、現在の設定と異なります</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
             <p>{`この書類の発行者: ${current.issuer.name}`}</p>
@@ -337,7 +346,7 @@ export function DocumentEditor({
           </Card>
 
           {unmet.length > 0 && (
-            <Alert>
+            <Alert role="note">
               <AlertTitle>適格請求書の記載事項が不足しています</AlertTitle>
               <AlertDescription>
                 <ul className="list-disc pl-4">
@@ -349,18 +358,15 @@ export function DocumentEditor({
             </Alert>
           )}
 
-          {status && (
-            <Alert variant={status.type === "error" ? "destructive" : "default"} role="status">
-              <AlertDescription>{status.message}</AlertDescription>
-            </Alert>
-          )}
-          {Object.keys(errors).length > 0 && (
-            <Alert variant="destructive" role="status">
-              <AlertDescription>
-                入力内容にエラーがあります。各欄を確認してください。
-              </AlertDescription>
-            </Alert>
-          )}
+          <StatusMessage type={status?.type} message={status?.message} />
+          <StatusMessage
+            type="error"
+            message={
+              Object.keys(errors).length > 0
+                ? "入力内容にエラーがあります。各欄を確認してください。"
+                : undefined
+            }
+          />
 
           <Button type="submit" className="self-start">
             保存

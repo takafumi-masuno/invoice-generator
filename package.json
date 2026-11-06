@@ -2,6 +2,7 @@
   "name": "invoice-generator",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,6 +28,7 @@
     "valibot": "1.5.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.5",
     "@playwright/test": "1.65.0",
     "@tailwindcss/vite": "4.3.4",

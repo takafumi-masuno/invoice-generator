@@ -50,6 +50,17 @@ test("入力の直後は古い PDF をダウンロードできず、更新後の
   expect(text).toContain("変更後の宛先株式会社御中");
 });
 
+test("PDF に出力できない文字があると警告し、〓に置き換えて前後の文字を残す", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("button", { name: "サンプルで試す" }).click();
+
+  await page.getByRole("textbox", { name: /宛名/ }).fill("\u{20BB7}田商店");
+
+  await expect(page.getByText("PDF に出力できない文字があります")).toBeVisible();
+  const text = await downloadPdfText(page);
+  expect(text).toContain("〓田商店御中");
+});
+
 test("設定の登録から、見積書の作成、請求書への変換、PDF のダウンロードまで", async ({ page }) => {
   await page.goto("./");
 
