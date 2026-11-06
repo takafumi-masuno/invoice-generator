@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* README の英単語をクラス名として拾わないようにする（ビルド結果が文面で変わるのを防ぐ） */
+@source not "../README*.md";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
