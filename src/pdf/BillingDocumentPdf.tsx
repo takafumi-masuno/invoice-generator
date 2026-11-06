@@ -5,6 +5,9 @@ import { type BillingDocument, DOCUMENT_KIND_LABELS } from "@/domain/schema";
 import { PDF_FONT_FAMILY } from "./fonts";
 import { toPdfText } from "./lineBreak";
 
+/** A4 の高さ（pt） */
+const A4_HEIGHT = 841.89;
+
 const COLORS = { text: "#1f2937", muted: "#6b7280", border: "#9ca3af", headerBg: "#f3f4f6" };
 
 /** 表の列幅（A4 の本文幅 515pt に対する割合） */
@@ -92,10 +95,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: "bold", marginBottom: 2 },
   pageNumber: {
     position: "absolute",
-    bottom: 20,
+    top: A4_HEIGHT - 30,
+    left: 40,
     right: 40,
     fontSize: 8,
     color: COLORS.muted,
+    textAlign: "right",
   },
 });
 
@@ -237,6 +242,7 @@ export function BillingDocumentPdf({ doc }: { doc: BillingDocument }) {
           </View>
         )}
 
+        {/* render の Text に bottom を指定すると高さが計算できずページの外に配置されるため、top で指定する */}
         <Text
           style={styles.pageNumber}
           fixed

@@ -109,4 +109,27 @@ describe("BillingDocumentPdf", () => {
     expect(text).toContain("品目100");
     expect(text).toContain("合計（税込）¥110,000");
   });
+
+  it("ページ番号が各ページの下部（ページの内側）に出る", async () => {
+    const many = Array.from({ length: 100 }, (_, i) =>
+      lineItemFixture({ id: `item-${i}`, description: `品目${i + 1}` }),
+    );
+    const buffer = await renderToBuffer(
+      <BillingDocumentPdf doc={invoiceFixture({ items: many })} />,
+    );
+    const pdf = await getDocument({ data: new Uint8Array(buffer), verbosity: 0 }).promise;
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const { items: textItems } = await page.getTextContent();
+      const label = textItems.find(
+        (item) => "str" in item && item.str.replace(/\s/g, "") === `${i}/${pdf.numPages}`,
+      );
+      expect(label, `${i}ページ目のページ番号`).toBeDefined();
+      // PDF の座標は下が原点。transform[5] が文字の Y 座標
+      const y = label && "transform" in label ? label.transform[5] : -1;
+      expect(y).toBeGreaterThan(0);
+      expect(y).toBeLessThan(40);
+    }
+  });
 });

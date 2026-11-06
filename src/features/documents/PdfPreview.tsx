@@ -28,12 +28,7 @@ export default function PdfPreview({ doc }: { doc: BillingDocument }) {
           <AlertDescription>{`PDF を作成できませんでした: ${String(instance.error)}`}</AlertDescription>
         </Alert>
       ) : (
-        <Button asChild variant="outline" className="self-start" disabled={!instance.url}>
-          <a href={instance.url ?? undefined} download={fileName}>
-            <Download aria-hidden="true" />
-            PDF をダウンロード
-          </a>
-        </Button>
+        <DownloadButton url={instance.url} fileName={fileName} />
       )}
       {instance.url ? (
         <iframe
@@ -45,5 +40,29 @@ export default function PdfPreview({ doc }: { doc: BillingDocument }) {
         !instance.error && <p className="text-sm text-muted-foreground">PDF を作成しています…</p>
       )}
     </div>
+  );
+}
+
+function DownloadButton({ url, fileName }: { url: string | null; fileName: string }) {
+  const content = (
+    <>
+      <Download aria-hidden="true" />
+      PDF をダウンロード
+    </>
+  );
+  // リンク（a 要素）には disabled が効かないため、PDF ができるまでは無効なボタンを出す
+  if (!url) {
+    return (
+      <Button type="button" variant="outline" className="self-start" disabled>
+        {content}
+      </Button>
+    );
+  }
+  return (
+    <Button asChild variant="outline" className="self-start">
+      <a href={url} download={fileName}>
+        {content}
+      </a>
+    </Button>
   );
 }
