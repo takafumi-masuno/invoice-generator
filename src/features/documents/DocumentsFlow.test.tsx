@@ -1,39 +1,12 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, waitFor, within } from "@testing-library/react";
+import type userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { App } from "@/App";
 import { invoiceFixture, issuerFixture, lineItemFixture } from "@/domain/testFixtures";
-import { AppStoreProvider } from "@/storage/AppStoreContext";
-import { createInitialAppData, parseAppData, serializeAppData } from "@/storage/appData";
-import { createAppStore, STORAGE_KEY } from "@/storage/appStore";
-import { MemoryStorage } from "@/test/memoryStorage";
+import { dataWithIssuer, renderApp, savedDocuments } from "@/test/renderApp";
 
 // PDF の生成はこのテストの対象外（内容は BillingDocumentPdf.test.tsx で確認する）
 vi.mock("./PdfPreview", () => ({ default: () => <p>PDF のプレビュー</p> }));
-
-const dataWithIssuer = (issuer = issuerFixture()) => ({
-  ...createInitialAppData(),
-  settings: { ...createInitialAppData().settings, issuer },
-});
-
-function setup(data: ReturnType<typeof createInitialAppData> | null = dataWithIssuer()) {
-  const storage = new MemoryStorage();
-  if (data) storage.items.set(STORAGE_KEY, serializeAppData(data));
-  const user = userEvent.setup();
-  render(
-    <AppStoreProvider store={createAppStore(storage)}>
-      <App />
-    </AppStoreProvider>,
-  );
-  return { user, storage };
-}
-
-const savedDocuments = (storage: MemoryStorage) => {
-  const result = parseAppData(storage.items.get(STORAGE_KEY) ?? "");
-  if (!result.ok) throw new Error(result.message);
-  return result.data.documents;
-};
 
 const textbox = (name: string | RegExp) => screen.getByRole("textbox", { name });
 const spinbutton = (name: string) => screen.getByRole("spinbutton", { name });
@@ -49,7 +22,7 @@ async function fillInvoice(user: ReturnType<typeof userEvent.setup>) {
 
 describe("書類の作成", () => {
   it("発行者が未登録なら案内を出し、設定タブへ移動できる", async () => {
-    const { user } = setup(null);
+    const { user } = renderApp(null);
 
     expect(screen.queryByRole("button", { name: "新しい請求書" })).not.toBeInTheDocument();
     await user.click(button("設定を開く"));
@@ -59,7 +32,7 @@ describe("書類の作成", () => {
   });
 
   it("請求書を作成して保存すると、一覧に表示され、開き直せる", async () => {
-    const { user, storage } = setup();
+    const { user, storage } = renderApp();
     await user.click(button("新しい請求書"));
     await fillInvoice(user);
 
@@ -81,7 +54,7 @@ describe("書類の作成", () => {
   });
 
   it("必須項目が空なら保存せず、エラーを表示する", async () => {
-    const { user, storage } = setup();
+    const { user, storage } = renderApp();
     await user.click(button("新しい請求書"));
 
     await user.click(button("保存"));
@@ -93,7 +66,7 @@ describe("書類の作成", () => {
   });
 
   it("明細の入力に合わせて、税率ごとの合計がすぐに変わる", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
     await user.clear(spinbutton("1行目の単価（税抜）"));
     await user.type(spinbutton("1行目の単価（税抜）"), "11345");
@@ -111,7 +84,7 @@ describe("書類の作成", () => {
   });
 
   it("単価を空欄にしても画面が壊れない（0円として表示する）", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
 
     await user.clear(spinbutton("1行目の単価（税抜）"));
@@ -120,7 +93,7 @@ describe("書類の作成", () => {
   });
 
   it("明細を追加・削除できる（最後の1行は削除できない）", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
     expect(button("1行目を削除")).toBeDisabled();
 
@@ -133,7 +106,7 @@ describe("書類の作成", () => {
   });
 
   it("登録番号がない発行者の請求書には、記載事項の不足を警告する（保存はできる）", async () => {
-    const { user, storage } = setup(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
+    const { user, storage } = renderApp(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
     await user.click(button("新しい請求書"));
     await fillInvoice(user);
 
@@ -145,7 +118,7 @@ describe("書類の作成", () => {
   });
 
   it("見積書には取引年月日の欄がなく、警告も出ない", async () => {
-    const { user, storage } = setup(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
+    const { user, storage } = renderApp(dataWithIssuer(issuerFixture({ registrationNumber: "" })));
     await user.click(button("新しい見積書"));
 
     expect(screen.queryByLabelText(/取引年月日/)).not.toBeInTheDocument();
@@ -160,7 +133,7 @@ describe("書類の作成", () => {
   });
 
   it("保存していない変更があるときは、戻る前に確認する", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
     await user.type(textbox(/宛名/), "入力中");
 
@@ -179,7 +152,7 @@ describe("書類の作成", () => {
   });
 
   it("変更がなければ、確認なしで戻れる", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
 
     await user.click(button("一覧に戻る"));
@@ -189,7 +162,7 @@ describe("書類の作成", () => {
   });
 
   it("編集中にタブを切り替えても、入力は消えない", async () => {
-    const { user } = setup();
+    const { user } = renderApp();
     await user.click(button("新しい請求書"));
     await user.type(textbox(/宛名/), "入力中の宛名");
 
@@ -210,7 +183,7 @@ describe("書類の作成", () => {
         }),
       ],
     };
-    const { user, storage } = setup(data);
+    const { user, storage } = renderApp(data);
 
     await user.click(button("請求書 I-1 を開く"));
     await user.type(textbox("件名"), "（修正）");

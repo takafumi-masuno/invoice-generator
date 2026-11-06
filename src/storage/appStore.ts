@@ -46,7 +46,7 @@ export function createAppStore(storage: StorageLike | null) {
     } catch (error) {
       return {
         status: "error",
-        message: `保存データを読み込めませんでした（${describe(error)}）`,
+        message: `保存データを読み込めませんでした（${errorMessage(error)}）`,
         raw: null,
       };
     }
@@ -73,7 +73,7 @@ export function createAppStore(storage: StorageLike | null) {
       throw new StorageWriteError(
         isQuotaExceeded
           ? "保存できる容量（ブラウザの上限）を超えたため、保存できませんでした。不要な書類を削除してください"
-          : `保存できませんでした（${describe(error)}）`,
+          : `保存できませんでした（${errorMessage(error)}）`,
         { cause: error },
       );
     }
@@ -114,6 +114,11 @@ export function createAppStore(storage: StorageLike | null) {
       write({ ...data, documents });
     },
 
+    deleteDocument(id: string): void {
+      const data = requireReadyData();
+      write({ ...data, documents: data.documents.filter((d) => d.id !== id) });
+    },
+
     /** データ全体を置き換える（インポート、読み込めないデータの初期化）。読み込みエラーの状態でも実行できる */
     replaceData(data: AppData): void {
       write(data);
@@ -127,6 +132,6 @@ export function createAppStore(storage: StorageLike | null) {
   };
 }
 
-function describe(error: unknown): string {
+function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }

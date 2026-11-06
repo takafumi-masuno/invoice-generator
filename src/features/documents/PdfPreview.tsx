@@ -10,7 +10,14 @@ import { registerPdfFonts } from "@/pdf/fonts";
 registerPdfFonts(`${import.meta.env.BASE_URL}fonts/`);
 
 /** PDF のプレビューとダウンロード。大きいため、編集画面を開いたときに遅延読み込みする */
-export default function PdfPreview({ doc }: { doc: BillingDocument }) {
+export default function PdfPreview({
+  doc,
+  outdated,
+}: {
+  doc: BillingDocument;
+  /** 入力が doc にまだ反映されていないとき true */
+  outdated: boolean;
+}) {
   const element = useMemo(() => <BillingDocumentPdf doc={doc} />, [doc]);
   const [instance, update] = usePDF({ document: element });
 
@@ -28,7 +35,11 @@ export default function PdfPreview({ doc }: { doc: BillingDocument }) {
           <AlertDescription>{`PDF を作成できませんでした: ${String(instance.error)}`}</AlertDescription>
         </Alert>
       ) : (
-        <DownloadButton url={instance.url} fileName={fileName} />
+        // 古い内容の PDF をダウンロードしないよう、入力が反映されるまではリンクを出さない
+        <DownloadButton
+          url={outdated || instance.loading ? null : instance.url}
+          fileName={fileName}
+        />
       )}
       {instance.url ? (
         <iframe
@@ -44,24 +55,20 @@ export default function PdfPreview({ doc }: { doc: BillingDocument }) {
 }
 
 function DownloadButton({ url, fileName }: { url: string | null; fileName: string }) {
-  const content = (
-    <>
-      <Download aria-hidden="true" />
-      PDF をダウンロード
-    </>
-  );
   // リンク（a 要素）には disabled が効かないため、PDF ができるまでは無効なボタンを出す
   if (!url) {
     return (
       <Button type="button" variant="outline" className="self-start" disabled>
-        {content}
+        <Download aria-hidden="true" />
+        PDF を更新しています…
       </Button>
     );
   }
   return (
     <Button asChild variant="outline" className="self-start">
       <a href={url} download={fileName}>
-        {content}
+        <Download aria-hidden="true" />
+        PDF をダウンロード
       </a>
     </Button>
   );

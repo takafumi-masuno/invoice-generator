@@ -19,10 +19,16 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { calculateTotals } from "@/domain/calc";
+import { isNumberTaken } from "@/domain/documentDerivation";
 import { formatYen } from "@/domain/format";
 import { findUnmetRequirements } from "@/domain/qualifiedInvoice";
 import { ROUNDING_MODE_LABELS, ROUNDING_MODES } from "@/domain/rounding";
-import { type BillingDocument, DOCUMENT_KIND_LABELS, HONORIFICS } from "@/domain/schema";
+import {
+  type BillingDocument,
+  DOCUMENT_KIND_LABELS,
+  HONORIFICS,
+  type Issuer,
+} from "@/domain/schema";
 import { StorageWriteError } from "@/storage/appStore";
 import {
   type DocumentFormValues,
@@ -43,10 +49,19 @@ type Status = { type: "success" | "error"; message: string } | null;
 
 export function DocumentEditor({
   document,
+  documents,
+  latestIssuer,
+  notice,
   onSave,
   onClose,
 }: {
   document: BillingDocument;
+  /** 保存済みの書類（番号の重複チェック用） */
+  documents: readonly BillingDocument[];
+  /** 設定に登録されている最新の発行者 */
+  latestIssuer: Issuer | null;
+  /** 複製やサンプルなど、開いた経緯の案内 */
+  notice?: string;
   /** 保存処理。保存できなければ StorageWriteError を投げる */
   onSave: (document: BillingDocument) => void;
   onClose: () => void;
@@ -68,7 +83,19 @@ export function DocumentEditor({
   const unmet = current.kind === "invoice" ? findUnmetRequirements(current) : [];
   const title = DOCUMENT_KIND_LABELS[document.kind];
 
+  // 書類は作成時点の発行者を持つため、設定を変えたあとは利用者が選んで更新する
+  const canUpdateIssuer =
+    latestIssuer !== null && JSON.stringify(latestIssuer) !== JSON.stringify(current.issuer);
+
   const onSubmit = (validated: BillingDocument) => {
+    if (isNumberTaken(validated, documents)) {
+      form.setError(
+        "number",
+        { message: `この番号の${title}はすでにあります。別の番号にしてください` },
+        { shouldFocus: true },
+      );
+      return;
+    }
     const saved = { ...validated, updatedAt: new Date().toISOString() };
     try {
       onSave(saved);
@@ -94,6 +121,29 @@ export function DocumentEditor({
         </Button>
         <h2 className="font-bold">{`${title}の編集`}</h2>
       </div>
+
+      {notice && (
+        <Alert>
+          <AlertDescription>{notice}</AlertDescription>
+        </Alert>
+      )}
+
+      {canUpdateIssuer && latestIssuer && (
+        <Alert>
+          <AlertTitle>発行者の情報が、現在の設定と異なります</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{`この書類の発行者: ${current.issuer.name}`}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => form.setValue("issuer", latestIssuer, { shouldDirty: true })}
+            >
+              現在の設定の内容に更新
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <form
@@ -321,7 +371,7 @@ export function DocumentEditor({
           <Suspense
             fallback={<p className="text-sm text-muted-foreground">PDF を準備しています…</p>}
           >
-            <PdfPreview doc={previewDocument} />
+            <PdfPreview doc={previewDocument} outdated={previewDocument !== current} />
           </Suspense>
         </section>
       </div>
