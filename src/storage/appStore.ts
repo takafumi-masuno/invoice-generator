@@ -1,3 +1,4 @@
+import type { BillingDocument } from "@/domain/schema";
 import {
   type AppData,
   createInitialAppData,
@@ -101,6 +102,16 @@ export function createAppStore(storage: StorageLike | null) {
 
     saveSettings(settings: Settings): void {
       write({ ...requireReadyData(), settings });
+    },
+
+    /** 書類を保存する。同じ ID があれば置き換え、なければ先頭に追加する */
+    saveDocument(document: BillingDocument): void {
+      const data = requireReadyData();
+      const exists = data.documents.some((d) => d.id === document.id);
+      const documents = exists
+        ? data.documents.map((d) => (d.id === document.id ? document : d))
+        : [document, ...data.documents];
+      write({ ...data, documents });
     },
 
     /** データ全体を置き換える（インポート、読み込めないデータの初期化）。読み込みエラーの状態でも実行できる */

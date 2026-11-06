@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { issuerFixture } from "@/domain/testFixtures";
+import { invoiceFixture, issuerFixture } from "@/domain/testFixtures";
 import { MemoryStorage } from "@/test/memoryStorage";
 import { createInitialAppData, serializeAppData } from "./appData";
 import { createAppStore, STORAGE_KEY, StorageWriteError } from "./appStore";
@@ -30,6 +30,23 @@ describe("createAppStore", () => {
     expect(state.status === "ready" && state.data.settings).toEqual(settingsFixture());
     // 作り直しても同じデータを読み込める
     expect(createAppStore(storage).getState()).toEqual(state);
+  });
+
+  it("書類を保存する（新しい書類は先頭に追加し、同じ ID は置き換える）", () => {
+    const store = createAppStore(new MemoryStorage());
+    const documentsOf = () => {
+      const state = store.getState();
+      return state.status === "ready" ? state.data.documents : [];
+    };
+
+    store.saveDocument(invoiceFixture({ id: "a", number: "1" }));
+    store.saveDocument(invoiceFixture({ id: "b", number: "2" }));
+    store.saveDocument(invoiceFixture({ id: "a", number: "1-改" }));
+
+    expect(documentsOf().map((d) => [d.id, d.number])).toEqual([
+      ["b", "2"],
+      ["a", "1-改"],
+    ]);
   });
 
   it("保存データが壊れていたらエラー状態にし、上書きしない", () => {
