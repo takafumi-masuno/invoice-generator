@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { AppFooter } from "@/components/AppFooter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentsPage } from "@/features/documents/DocumentsPage";
 import { SettingsPage } from "@/features/settings/SettingsPage";
@@ -11,7 +12,7 @@ export function App() {
   const settingsTabRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div className="min-h-svh bg-muted/40">
+    <div className="flex min-h-svh flex-col bg-muted/40">
       <header className="border-b bg-background">
         <div className="mx-auto max-w-7xl px-4 py-5">
           <h1 className="text-xl font-bold">見積書・請求書ジェネレーター</h1>
@@ -21,7 +22,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">
         {state.status === "error" && (
           <StorageErrorPanel message={state.message} raw={state.raw} store={store} />
         )}
@@ -62,6 +63,8 @@ export function App() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <AppFooter />
     </div>
   );
 }

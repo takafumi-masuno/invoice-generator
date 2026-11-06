@@ -34,6 +34,26 @@ const jsonFile = (content: string, name = "backup.json") =>
   new File([content], name, { type: "application/json" });
 
 describe("App", () => {
+  it.each([
+    ["通常時", null],
+    ["保存データを読み込めないとき", "{壊れたデータ"],
+  ])("%s: フッターに免責とリンクを表示する", (_label, saved) => {
+    const storage = new MemoryStorage();
+    if (saved) storage.items.set(STORAGE_KEY, saved);
+    setup(storage);
+
+    const footer = within(screen.getByRole("contentinfo"));
+    expect(footer.getByText(/作成した書類が税務上有効であることは保証しません/)).toBeVisible();
+    expect(footer.getByRole("link", { name: "ソースコード（GitHub）" })).toHaveAttribute(
+      "href",
+      "https://github.com/takafumi-masuno/invoice-generator",
+    );
+    expect(footer.getByRole("link", { name: "Takafumi Masuno" })).toHaveAttribute(
+      "href",
+      "https://takafumi-masuno.github.io/",
+    );
+  });
+
   it("設定タブで発行者情報を保存すると、ブラウザに保存される", async () => {
     const { user, storage } = setup();
     await user.click(screen.getByRole("tab", { name: "設定" }));
