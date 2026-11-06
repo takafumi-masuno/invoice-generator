@@ -371,7 +371,7 @@ export function DocumentEditor({
           <Suspense
             fallback={<p className="text-sm text-muted-foreground">PDF を準備しています…</p>}
           >
-            <PdfPreview doc={previewDocument} />
+            <PdfPreview doc={previewDocument} outdated={previewDocument !== current} />
           </Suspense>
         </section>
       </div>
