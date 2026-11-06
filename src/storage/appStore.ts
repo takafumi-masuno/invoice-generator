@@ -114,6 +114,11 @@ export function createAppStore(storage: StorageLike | null) {
       write({ ...data, documents });
     },
 
+    deleteDocument(id: string): void {
+      const data = requireReadyData();
+      write({ ...data, documents: data.documents.filter((d) => d.id !== id) });
+    },
+
     /** データ全体を置き換える（インポート、読み込めないデータの初期化）。読み込みエラーの状態でも実行できる */
     replaceData(data: AppData): void {
       write(data);

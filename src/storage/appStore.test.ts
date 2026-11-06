@@ -49,6 +49,17 @@ describe("createAppStore", () => {
     ]);
   });
 
+  it("書類を削除する", () => {
+    const store = createAppStore(new MemoryStorage());
+    store.saveDocument(invoiceFixture({ id: "a" }));
+    store.saveDocument(invoiceFixture({ id: "b" }));
+
+    store.deleteDocument("a");
+
+    const state = store.getState();
+    expect(state.status === "ready" && state.data.documents.map((d) => d.id)).toEqual(["b"]);
+  });
+
   it("保存データが壊れていたらエラー状態にし、上書きしない", () => {
     const storage = new MemoryStorage();
     storage.items.set(STORAGE_KEY, "{broken");
