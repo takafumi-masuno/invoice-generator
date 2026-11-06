@@ -1,11 +1,12 @@
 import { usePDF } from "@react-pdf/renderer";
 import { Download } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { type BillingDocument, DOCUMENT_KIND_LABELS } from "@/domain/schema";
 import { BillingDocumentPdf } from "@/pdf/BillingDocumentPdf";
 import { registerPdfFonts } from "@/pdf/fonts";
+import { findUnsupportedChars, UNSUPPORTED_CHAR_REPLACEMENT } from "@/pdf/pdfText";
 
 registerPdfFonts(`${import.meta.env.BASE_URL}fonts/`);
 
@@ -26,9 +27,18 @@ export default function PdfPreview({
   }, [element, update]);
 
   const fileName = `${DOCUMENT_KIND_LABELS[doc.kind]}_${doc.number}.pdf`;
+  const unsupportedChars = useMemo(() => findUnsupportedChars(doc), [doc]);
 
   return (
     <div className="flex flex-col gap-3">
+      {unsupportedChars.length > 0 && (
+        <Alert>
+          <AlertTitle>PDF に出力できない文字があります</AlertTitle>
+          <AlertDescription>
+            {`${unsupportedChars.join("、")} は、PDF では「${UNSUPPORTED_CHAR_REPLACEMENT}」になります。別の文字に置き換えてください。`}
+          </AlertDescription>
+        </Alert>
+      )}
       {instance.error ? (
         <Alert variant="destructive">
           {/* 型は string だが、実行時は Error オブジェクトが入る */}

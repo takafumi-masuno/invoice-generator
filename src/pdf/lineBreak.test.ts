@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { splitForLineBreak, toPdfText } from "./lineBreak";
-
-const NBSP = String.fromCodePoint(0xa0);
+import { NBSP, splitForLineBreak } from "./lineBreak";
+import { toPdfText } from "./pdfText";
 
 /** 区切りの '' を除いて、改行できる単位だけを取り出す */
 const units = (word: string) => splitForLineBreak(word).filter((s) => s !== "");
@@ -53,15 +52,5 @@ describe("splitForLineBreak", () => {
 
   it("サロゲートペアの文字を壊さない", () => {
     expect(units("𠮷野家")).toEqual(["𠮷", "野", "家"]);
-  });
-});
-
-describe("toPdfText", () => {
-  it("半角スペースを NBSP に置き換える", () => {
-    expect(toPdfText("a b  c")).toBe(`a${NBSP}b${NBSP}${NBSP}c`);
-  });
-
-  it("全角スペースや改行はそのまま", () => {
-    expect(toPdfText("あ　い\nう")).toBe("あ　い\nう");
   });
 });

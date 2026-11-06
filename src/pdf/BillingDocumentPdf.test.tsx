@@ -40,6 +40,16 @@ describe("BillingDocumentPdf", () => {
     registerPdfFonts(fontDir);
   });
 
+  it("異体字セレクタ・結合文字・フォントにない文字を含む宛名でも、前後の文字が残る", async () => {
+    const { text } = await renderPdf(
+      invoiceFixture({
+        client: { name: "葛\u{E0100}飾が\u{20BB7}田가様", honorific: "御中", address: "" },
+      }),
+    );
+
+    expect(text).toContain("葛飾が〓田〓様御中");
+  });
+
   describe("適格請求書の記載事項がすべて出力される", () => {
     it("6項目", async () => {
       const { text } = await renderPdf(
