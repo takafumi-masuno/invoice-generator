@@ -135,7 +135,7 @@ export function DocumentsPage({
   const visibleDocuments = filterDocuments(data.documents, { query, kind: kindFilter });
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex max-w-4xl flex-col gap-6">
       {issuer ? (
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={() => startNew("invoice")}>

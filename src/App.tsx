@@ -53,7 +53,7 @@ export function App() {
 
           <TabsContent value="settings" forceMount className="data-[state=inactive]:hidden">
             {state.status === "ready" ? (
-              <div className="mx-auto max-w-4xl">
+              <div className="max-w-4xl">
                 <SettingsPage data={state.data} store={store} />
               </div>
             ) : (
